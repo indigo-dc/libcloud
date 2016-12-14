@@ -56,10 +56,11 @@ class DimensionDataBackupDriver(BackupDriver):
     def __init__(self, key, secret=None, secure=True, host=None, port=None,
                  api_version=None, region=DEFAULT_REGION, **kwargs):
 
-        if region not in API_ENDPOINTS:
-            raise ValueError('Invalid region: %s' % (region))
-
-        self.selected_region = API_ENDPOINTS[region]
+        if region not in API_ENDPOINTS and host is None:
+            raise ValueError(
+                'Invalid region: %s, no host specified' % (region))
+        if region is not None:
+            self.selected_region = API_ENDPOINTS[region]
 
         super(DimensionDataBackupDriver, self).__init__(
             key=key, secret=secret,
@@ -516,6 +517,8 @@ class DimensionDataBackupDriver(BackupDriver):
         """
         if not isinstance(target, BackupTarget):
             target = self.ex_get_target_by_id(target)
+            if target is None:
+                return
         response = self.connection.request_with_orgId_api_1(
             'server/%s/backup' % (target.address),
             method='GET').object

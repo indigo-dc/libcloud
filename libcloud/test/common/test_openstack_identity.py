@@ -457,17 +457,17 @@ class OpenStackIdentity_2_0_Connection_VOMSTests(unittest.TestCase):
         OpenStackIdentity_2_0_Connection_VOMS.conn_classes = (mock_cls, mock_cls)
 
         self.auth_instance = OpenStackIdentity_2_0_Connection_VOMS(auth_url='http://none',
-                                                                                user_id=None,
-                                                                                key='/tmp/proxy.pem',
-                                                                                tenant_name='VO')
+                                                                   user_id=None,
+                                                                   key='/tmp/proxy.pem',
+                                                                   tenant_name='VO')
         self.auth_instance.auth_token = 'mock'
 
     def test_authenticate(self):
         auth = OpenStackIdentity_2_0_Connection_VOMS(auth_url='http://none',
-                                                                  user_id=None,
-                                                                  key='/tmp/proxy.pem',
-                                                                  token_scope='test',
-                                                                  tenant_name="VO")
+                                                     user_id=None,
+                                                     key='/tmp/proxy.pem',
+                                                     token_scope='test',
+                                                     tenant_name="VO")
         auth.authenticate()
 
 
@@ -741,13 +741,19 @@ class OpenStackIdentity_2_0_Connection_VOMSMockHttp(MockHttp):
             status = httplib.UNAUTHORIZED
             data = json.loads(body)
             if 'voms' in data['auth'] and data['auth']['voms'] is True:
-                if 'tenantName' in data['auth'] and data['auth']['tenantName'] == 'VO':
-                    status = httplib.OK
+                status = httplib.OK
 
             body = ComputeFileFixtures('openstack').load('_v2_0__auth.json')
             headers = self.json_content_headers.copy()
             headers['x-subject-token'] = '00000000000000000000000000000000'
             return (status, body, headers, httplib.responses[httplib.OK])
+        raise NotImplementedError()
+
+    def _v2_0_tenants(self, method, url, body, headers):
+        if method == 'GET':
+            # get user projects
+            body = json.dumps({"tenant": [{"name": "tenant_name"}]})
+            return (httplib.OK, body, self.json_content_headers, httplib.responses[httplib.OK])
         raise NotImplementedError()
 
 if __name__ == '__main__':
